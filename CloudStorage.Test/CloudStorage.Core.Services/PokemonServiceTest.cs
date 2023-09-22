@@ -24,6 +24,7 @@ namespace CloudStorage.Test.CloudStorage.Core.Services
         private Mock<IConfigurationSection> _confConnectionStringSectionMock = new();
         private Mock<IConfigurationSection> _confContainerSectionMock = new();
         private Mock<IPokemonRepository> _repoMock = new();
+        private Mock<IStorageManager> _storageManager = new();
 
         [SetUp]
         public void Setup()
@@ -32,7 +33,8 @@ namespace CloudStorage.Test.CloudStorage.Core.Services
             _confContainerSectionMock.Setup(c => c.Value).Returns("pokemon-container-test");
             _confMock.Setup(c => c.GetSection("Azure:StorageConnectionString")).Returns(_confConnectionStringSectionMock.Object);
             _confMock.Setup(c => c.GetSection("Azure:ContainerName")).Returns(_confContainerSectionMock.Object);
-            _service = new PokemonService(_repoMock.Object, _envMock.Object, _confMock.Object);
+            _storageManager.Setup(mok => mok.UploadAsync(It.IsAny<IFormFile>())).ReturnsAsync("a-file.png");
+            _service = new PokemonService(_repoMock.Object, _envMock.Object, _confMock.Object, _storageManager.Object);
         }
 
         [Test]
@@ -40,7 +42,7 @@ namespace CloudStorage.Test.CloudStorage.Core.Services
         {
             var mockIFormFile = new Mock<IFormFile>();
             mockIFormFile.Setup(c => c.FileName).Returns("a-file.png");
-            var pokemonObj = new PokemonUpsertDAL { Name = "Pokemon", Photo = mockIFormFile.Object};
+            var pokemonObj = new PokemonUpsertDAL{Name = "Pokemon",Photo = mockIFormFile.Object};
             var result = _service.AddAsync(pokemonObj);
             Assert.IsNotNull(result);
         }
